@@ -636,5 +636,39 @@ namespace :pl do
       Pkg::Deb::Repo.ship_repo_configs
       Pkg::Rpm::Repo.ship_repo_configs
     end
+
+    # repos - repos we shipped to (pc1, puppet5, puppet6), an array
+    # might need another variable for apt, yum, downloads, but could call in job?
+    desc "Check that packages shipped and are in the correct location(s)"
+    task :ensure_shipped_packages do
+      repos = ["PC1", "puppet5", "puppet6"]
+      # get platforms from build_defaults.yaml?
+      yaml_url = "#{Pkg::Config.jenkins_repo_path}/#{Pkg::Config.project}/#{Pkg::Config.ref}/shipped/#{Pkg::Config.ref}.yaml"
+      # grab the associated yaml file
+      yaml_content = open(yaml_url){|f| f.read}
+      yaml_data = YAML::load(yaml_content)
+      # grab targets
+      rpm_targets = yaml_data[:rpm_targets]
+      deb_targets = yaml_data[:deb_targets]
+      release_num = yaml_data[:release]
+      repos.each do |repo|
+        rpm_targets.each do |target|
+          # turn into path
+          target_path = target.gsub("-", '\/')
+          target_ver = target.gsub("-", '.')
+          package_name = "#{Pkg::Config.project}-#{Pkg::Config.ref}-#{release_num}.#{target_ver}.rpm"
+          shipped_url = "http://yum.puppetlabs.com/#{repo}/#{target_path}/#{package_name}"
+          Pkg::Util.verify_url(shipped_url)
+        end
+        deb_targets.each do |target|
+          # turn into path, get info from deb and turn into path
+          codename = target.partition('-')[0]
+          arch = target.partition('-')[1]
+          package_name = "#{Pkg::Config.project}_#{Pkg::Config.ref}-#{release_num}#{codename}_#{arch}.deb"
+          shipped_url = "http://apt.puppetlabs.com/pool/#{codename}/#{repo}/p/#{Pkg::Config.project}/#{package_name}"
+          Pkg::Util.verify_url(shipped_url)
+        end
+      end
+    end
   end
 end

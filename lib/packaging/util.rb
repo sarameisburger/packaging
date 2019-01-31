@@ -113,6 +113,17 @@ module Pkg::Util
     Pkg::Config.instance_values
   end
 
+  def verify_url(url)
+      if $options[:url_check]
+        `curl -fsLI #{url}`
+        if ! $?.success?
+          # wanna fail probably...cuz it means the shipping screwed up
+          puts("Invalid url #{url}")
+        else puts ("url is valid!")
+        end
+      end
+  end
+
 
   # Construct a probably-correct (or correct-enough) URI for
   # tools like ssh or rsync. Currently lacking support for intuitive
