@@ -188,6 +188,12 @@ describe 'artifactory.rb' do
     end
   end
 
+  describe '#download_package' do
+    it 'downloads the correct package from artifactory' do
+      artifact.get_from('~/Desktop', '2018.1/repos/ubuntu-16.04-amd64/pe-activemq_2017.3.5.14.3-3xenial_all.deb')
+    end
+  end
+
   describe '#check_authorization' do
     it 'fails gracefully if authorization is not set' do
       original_artifactory_api_key = ENV['ARTIFACTORY_API_KEY']

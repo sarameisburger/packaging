@@ -1,0 +1,37 @@
+# Packages to include from el-6-x86_64
+rpm_enterprise__local/2018.1/el-6-x86_64/pe-client-tools-18.1.9.12.gcc98aca-1.el6.x86_64.rpm
+
+rpm_enterprise__local/2018.1/el-6-x86_64/pe-r10k-2.6.5.0.4.gb3ad366-1.el6.x86_64.rpm
+
+# Packages to include from el-7-x86_64
+rpm_enterprise__local/2018.1/el-7-x86_64/pe-client-tools-18.1.9.12.gcc98aca-1.el7.x86_64.rpm
+
+rpm_enterprise__local/2018.1/el-7-x86_64/pe-r10k-2.6.5.0.4.gb3ad366-1.el7.x86_64.rpm
+
+rpm_enterprise__local/2018.1/el-7-x86_64/pe-postgresql-devel-2018.1.9.6.13-1.pe.el7.x86_64.rpm
+
+rpm_enterprise__local/2018.1/el-7-x86_64/pe-console-services-termini-2018.1.9.8-1.el7.noarch.rpm
+
+# Packages to include from sles-12-x86_64
+rpm_enterprise__local/2018.1/sles-12-x86_64/pe-client-tools-18.1.9.12.gcc98aca-1.sles12.x86_64.rpm
+
+rpm_enterprise__local/2018.1/sles-12-x86_64/pe-r10k-2.6.5.0.4.gb3ad366-1.sles12.x86_64.rpm
+
+rpm_enterprise__local/2018.1/sles-12-x86_64/pe-postgresql-devel-2018.1.9.6.13-1.pe.sles12.x86_64.rpm
+
+# Packages to include from ubuntu-16.04-amd64
+debian_enterprise__local/2018.1/ubuntu-16.04-amd64/pe-puppet-enterprise-release_2018.1.9.0-1xenial_all.deb
+
+debian_enterprise__local/2018.1/ubuntu-16.04-amd64/puppet-agent_5.5.14.129.g439d945-1xenial_amd64.deb
+
+debian_enterprise__local/2018.1/ubuntu-16.04-amd64/pe-license_2018.1.1.0.1-2xenial_amd64.deb
+
+# Packages to include from ubuntu-18.04-amd64
+debian_enterprise__local/2018.1/ubuntu-18.04-amd64/pe-puppet-enterprise-release_2018.1.9.0-1bionic_all.deb
+
+debian_enterprise__local/2018.1/ubuntu-18.04-amd64/puppet-agent_5.5.14.129.g439d945-1bionic_amd64.deb
+
+debian_enterprise__local/2018.1/ubuntu-18.04-amd64/pe-nginx_2018.1.1.14.2-1bionic_amd64.deb
+
+
+

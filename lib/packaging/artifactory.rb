@@ -318,6 +318,26 @@ module Pkg
       end
     end
 
+    # iterate through the list we are given of all the packages and grab them and put in a local folder
+    # A generic get method to grab a file or files from artifactory
+    def download_packages(staging_directory, includes_file)
+      check_authorization
+      packages = File.readlines(includes_file)
+      packages.each do |line|
+          package_name = line.split('/').last.chomp.to_s
+          platform = line.split('/')[2].chomp
+          puts "package name is"
+          puts package_name
+          #artifact_to_download = Artifactory::Resource::Artifact.search(name: "pe-r10k-2.6.5.0.4.gb3ad366-1.el6.x86_64.rpm" , :artifactory_uri => @artifactory_uri )
+          artifact_to_download = Artifactory::Resource::Artifact.search(name: package_name , :artifactory_uri => @artifactory_uri, local_path: line )
+          unless artifact_to_download.empty?
+            puts "downloading #{package_name}... to #{staging_directory}/#{platform} "
+            artifact_to_download[0].download("#{staging_directory}/#{platform}", filename: package_name)
+          end
+        end
+    end
+
+
     private :check_authorization
   end
 end
