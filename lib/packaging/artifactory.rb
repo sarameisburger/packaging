@@ -320,21 +320,30 @@ module Pkg
 
     # iterate through the list we are given of all the packages and grab them and put in a local folder
     # A generic get method to grab a file or files from artifactory
-    def download_packages(staging_directory, includes_file)
+    def download_packages(staging_directory, includes_file, pe_version)
       check_authorization
-      packages = File.readlines(includes_file)
-      packages.each do |line|
-          package_name = line.split('/').last.chomp.to_s
-          platform = line.split('/')[2].chomp
-          puts "package name is"
-          puts package_name
-          #artifact_to_download = Artifactory::Resource::Artifact.search(name: "pe-r10k-2.6.5.0.4.gb3ad366-1.el6.x86_64.rpm" , :artifactory_uri => @artifactory_uri )
-          artifact_to_download = Artifactory::Resource::Artifact.search(name: package_name , :artifactory_uri => @artifactory_uri, local_path: line )
-          unless artifact_to_download.empty?
-            puts "downloading #{package_name}... to #{staging_directory}/#{platform} "
-            artifact_to_download[0].download("#{staging_directory}/#{platform}", filename: package_name)
-          end
+      artifacts = File.readlines(includes_file)
+      artifacts.each do |path|
+        artifact = parse_artifactory_path(path)
+        artifact_to_download = Artifactory::Resource::Artifact.search(name: artifact[:filename] , :artifactory_uri => @artifactory_uri, local_path: "#{artifact[:local_path]}/#{pe_version}/feature/repos/#{path}")
+        unless artifact_to_download.empty?
+          puts "downloading #{artifact[:filename]}... to #{staging_directory}/#{artifact[:platform]} "
+          artifact_to_download[0].download("#{staging_directory}/#{artifact[:platform]}", filename: artifact[:filename])
         end
+      end
+    end
+
+    def parse_artifactory_path(path)
+      # dist/name
+      artifact = Hash.new
+      artifact[:filename] = path.split('/').last.chomp
+      artifact[:platform] = path.split('/').first.chomp
+      if File.extname(artifact[:filename]) == '.rpm'
+        artifact[:local_path] = "rpm_enterprise__local"
+      else
+        artifact[:local_path] = "debian_enterprise__local"
+      end
+      return artifact
     end
 
 
