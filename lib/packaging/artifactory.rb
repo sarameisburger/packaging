@@ -280,7 +280,12 @@ module Pkg
       artifact_names = all_package_names(yaml_data[:platform_data], platform_tag)
       artifact_names.each do |artifact_name|
         artifact_to_promote = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
-
+        artifact_to_promote.each do |arti|
+          puts "the md5sum is...."
+          puts arti.md5
+          puts arti.download_uri
+          puts arti.last_modified
+        end
         if artifact_to_promote.empty?
           raise "Error: could not find PKG=#{pkg} at REF=#{git_ref} for #{platform_tag}"
         end
@@ -298,12 +303,13 @@ module Pkg
 
         begin
           puts "promoting #{artifact_name} to #{promotion_path}"
-          artifact_to_promote[0].copy(promotion_path)
-          unless properties.nil?
-            artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
-            promoted_artifact = artifacts.select { |artifact| artifact.download_uri =~ %r{#{promotion_path}} }.first
-            promoted_artifact.properties(properties)
-          end
+
+          #artifact_to_promote[0].copy(promotion_path)
+          # unless properties.nil?
+          #   artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
+          #   promoted_artifact = artifacts.select { |artifact| artifact.download_uri =~ %r{#{promotion_path}} }.first
+          #   promoted_artifact.properties(properties)
+          # end
         rescue Artifactory::Error::HTTPError => e
           if e.message =~ /(destination and source are the same|user doesn't have permissions to override)/i
             puts "Skipping promotion of #{artifact_name}; it has already been promoted"

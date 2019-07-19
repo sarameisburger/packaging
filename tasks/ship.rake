@@ -665,6 +665,12 @@ namespace :pl do
       Pkg::Rpm::Repo.ship_repo_configs
     end
 
+    desc 'test promotion'
+    task :test do
+      artifactory = Pkg::ManageArtifactory.new(Pkg::Config.project, Pkg::Config.ref)
+      artifactory.promote_package('puppet-agent', '7f4307c0e637d10491af21d7a330e2f8f2000324', 'el-6-x86_64', 'enterprise__local')
+   end
+
     desc 'Grab the specified artifactory package'
     task :grab_package do
       artifactory = Pkg::ManageArtifactory.new(Pkg::Config.project, Pkg::Config.ref)
