@@ -324,64 +324,23 @@ module Pkg
       end
     end
 
-    # iterate through the list we are given of all the packages and grab them and put in a local folder
-    # A generic get method to grab a file or files from artifactory
-    def download_packages(staging_directory, includes_file, pe_version, manifest)
+    # Using the manifest provided by enterprise-dist, grab the appropropriate packages from artifactory based on md5sum
+    def download_packages(staging_directory, manifest)
       check_authorization
       require 'digest'
       manifest.each do |dist, packages|
-        puts "Grabbing all #{dist} packages from artifactory"
+        puts "Grabbing the #{dist} packages from artifactory"
         packages.each do |name, info|
-        if info["filename"]
-          puts "inside info if statement"
-          # TODO: This is looking for pkg to be a single-element array. Let's clean this up
-          # once we're using exlusively explicit filenames instad of globs
-          pkg = Array("#{dist}/#{info["filename"]}")
-        else
-          puts "inside glob if statement"
-          glob = get_package_glob(name, dist, info)
-          pkg = FileList[glob]
-        end
-        if pkg.size == 1
-          puts "inside package size if statement"
-          sum = info["md5"]
-          puts "setting artifact to download"
-          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: sum).first
-          unless artifact_to_download.nil?
-            puts "setting name"
-            arti_name = artifact_to_download.download_uri
-            puts "downloading #{arti_name}"
+          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local"]).first
+          if artifact_to_download.nil?
+            raise "Error: what the hell, could not find package #{info["filename"]} with md5sum #{info["md5"]}"
+          else
+            puts "downloading #{artifact_to_download.download_uri}"
             artifact_to_download.download("#{staging_directory}/#{dist}", filename: "#{info["filename"]}")
           end
         end
-        
-      # artifacts = File.readlines(includes_file)
-      # artifacts.each do |path|
-      #   artifact = parse_artifactory_path(path)
-      #   artifact_to_download = Artifactory::Resource::Artifact.search(name: artifact[:filename] , :artifactory_uri => @artifactory_uri, local_path: "#{artifact[:local_path]}/#{pe_version}/feature/repos/#{path}")
-        #unless artifact_to_download.empty?
-          #puts "downloading #{artifact[:filename]}... to #{staging_directory}/#{artifact[:platform]} "
-          #artifact_to_download[0].download("#{staging_directory}/#{artifact[:platform]}", filename: artifact[:filename])
-
-          
-        end
-        #end
       end
     end
-
-    def parse_artifactory_path(path)
-      # dist/name
-      artifact = Hash.new
-      artifact[:filename] = path.split('/').last.chomp
-      artifact[:platform] = path.split('/').first.chomp
-      if File.extname(artifact[:filename]) == '.rpm'
-        artifact[:local_path] = "rpm_enterprise__local"
-      else
-        artifact[:local_path] = "debian_enterprise__local"
-      end
-      return artifact
-    end
-
 
     private :check_authorization
   end
