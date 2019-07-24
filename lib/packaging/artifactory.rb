@@ -342,15 +342,20 @@ module Pkg
       end
     end
 
-    # Ship PE tarballs to ci-ready directory in artifactory
-    def ship_pe_tarballs(tarball_path, pe_version)
+    # Ship PE tarballs to specified artifactory repo and paths
+    # tarball_path String the path of the tarballs to ship
+    # target_repo String the artifactory repo to ship the tarballs
+    # ship_paths [String] the artifactory path(s) to ship the tarballs to within the target_repo
+    def ship_pe_tarballs(tarball_path, target_repo, ship_paths)
       check_authorization
       Dir.foreach("#{tarball_path}/") do |pe_tarball|
         unless pe_tarball == '.' || pe_tarball == ".."
-          puts "Uploading #{pe_tarball} to artifactory"
-          artifact = Artifactory::Resource::Artifact.new(local_path: "#{tarball_path}/#{pe_tarball}")
-          artifact.upload("generic_enterprise__local", "/#{pe_version}/ci-ready/#{pe_tarball}")
-          puts "do we get past here?"
+          ship_paths.each do |path|
+            puts "Uploading #{pe_tarball} to artifactory"
+            artifact = Artifactory::Resource::Artifact.new(local_path: "#{tarball_path}/#{pe_tarball}")
+            artifact.upload("#{target_repo}", "/#{path}")
+            puts "done"
+          end
         end
       end
     end
