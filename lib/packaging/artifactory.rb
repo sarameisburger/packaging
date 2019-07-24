@@ -281,10 +281,6 @@ module Pkg
       artifact_names.each do |artifact_name|
         artifact_to_promote = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
         artifact_to_promote.each do |arti|
-          puts "the md5sum is...."
-          puts arti.md5
-          puts arti.download_uri
-          puts arti.last_modified
         end
         if artifact_to_promote.empty?
           raise "Error: could not find PKG=#{pkg} at REF=#{git_ref} for #{platform_tag}"
@@ -303,13 +299,12 @@ module Pkg
 
         begin
           puts "promoting #{artifact_name} to #{promotion_path}"
-
-          #artifact_to_promote[0].copy(promotion_path)
-          # unless properties.nil?
-          #   artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
-          #   promoted_artifact = artifacts.select { |artifact| artifact.download_uri =~ %r{#{promotion_path}} }.first
-          #   promoted_artifact.properties(properties)
-          # end
+          artifact_to_promote[0].copy(promotion_path)
+          unless properties.nil?
+            artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, :artifactory_uri => @artifactory_uri)
+            promoted_artifact = artifacts.select { |artifact| artifact.download_uri =~ %r{#{promotion_path}} }.first
+            promoted_artifact.properties(properties)
+          end
         rescue Artifactory::Error::HTTPError => e
           if e.message =~ /(destination and source are the same|user doesn't have permissions to override)/i
             puts "Skipping promotion of #{artifact_name}; it has already been promoted"
@@ -325,13 +320,15 @@ module Pkg
     end
 
     # Using the manifest provided by enterprise-dist, grab the appropropriate packages from artifactory based on md5sum
+    # staging_directory String location to download packages to
+    # manifest JSON File containing information about what packages to download and the corresponding md5sums
     def download_packages(staging_directory, manifest)
       check_authorization
       require 'digest'
       manifest.each do |dist, packages|
         puts "Grabbing the #{dist} packages from artifactory"
         packages.each do |name, info|
-          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local"]).first
+          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local", "rpm__local", "debian__local"]).first
           if artifact_to_download.nil?
             raise "Error: what the hell, could not find package #{info["filename"]} with md5sum #{info["md5"]}"
           else
@@ -351,10 +348,14 @@ module Pkg
       Dir.foreach("#{tarball_path}/") do |pe_tarball|
         unless pe_tarball == '.' || pe_tarball == ".."
           ship_paths.each do |path|
-            puts "Uploading #{pe_tarball} to artifactory"
-            artifact = Artifactory::Resource::Artifact.new(local_path: "#{tarball_path}/#{pe_tarball}")
-            artifact.upload("#{target_repo}", "/#{path}")
-            puts "done"
+            begin
+              puts "Uploading #{pe_tarball} to #{target_repo}/#{path}... "
+              artifact = Artifactory::Resource::Artifact.new(local_path: "#{tarball_path}/#{pe_tarball}")
+              artifact.upload(target_repo, "/#{path}/#{pe_tarball}")
+              puts " ...done"
+            rescue Errno::EPIPE
+              STDERR.puts "Error: Could not upload #{pe_tarball} to #{path}"
+            end
           end
         end
       end
