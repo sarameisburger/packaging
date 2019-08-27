@@ -197,6 +197,10 @@ module Pkg
     def package_exists_on_artifactory?(package)
       check_authorization
       artifact = Artifactory::Resource::Artifact.search(name: File.basename(package), :artifactory_uri => @artifactory_uri)
+      puts "artifact type is..."
+      puts artifact.class
+      artifact2 = Artifactory::Resource::Artifact.new
+      puts artifact2.class
       if artifact.empty?
         return false
       else
