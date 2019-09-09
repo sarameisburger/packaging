@@ -336,25 +336,6 @@ module Pkg
       end
     end
 
-    # Using the manifest provided by enterprise-dist, grab the appropropriate packages from artifactory based on md5sum
-    # @param staging_directory [String] location to download packages to
-    # @param manifest [File] JSON file containing information about what packages to download and the corresponding md5sums
-    def download_packages(staging_directory, manifest)
-      check_authorization
-      manifest.each do |dist, packages|
-        puts "Grabbing the #{dist} packages from artifactory"
-        packages.each do |name, info|
-          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local"]).first
-          if artifact_to_download.nil?
-            raise "Error: what the hell, could not find package #{info["filename"]} with md5sum #{info["md5"]}"
-          else
-            puts "downloading #{artifact_to_download.download_uri}"
-            artifact_to_download.download("#{staging_directory}/#{dist}", filename: "#{info["filename"]}")
-          end
-        end
-      end
-    end
-
     # Ship PE tarballs to specified artifactory repo and paths
     # @param tarball_path [String] the path of the tarballs to ship
     # @param target_repo [String] the artifactory repo to ship the tarballs to
@@ -390,30 +371,51 @@ module Pkg
       end
     end
 
-    # Download an artifact based on name, repo, and path to artifact
-    # @param artifact_name [String] name of artifact to download
-    # @param repo [String] repo the artifact lives
-    # @param path [String] path to artifact in the repo
-    def download_artifact(artifact_name, repo, path)
+    # Using the manifest provided by enterprise-dist, grab the appropropriate packages from artifactory based on md5sum
+    # @param staging_directory [String] location to download packages to
+    # @param manifest [File] JSON file containing information about what packages to download and the corresponding md5sums
+    def download_artifacts_from_manifest(staging_directory, manifest)
       check_authorization
-      artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, repos: repo)
-      artifacts.each do |artifact|
-        if artifact.download_uri.include? path
-          artifact.download('.')
+      manifest.each do |dist, packages|
+        puts "Grabbing the #{dist} packages from artifactory"
+        packages.each do |name, info|
+          artifact_to_download = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local"]).first
+          if artifact_to_download.nil?
+            raise "Error: what the hell, could not find package #{info["filename"]} with md5sum #{info["md5"]}"
+          else
+            puts "downloading #{artifact_to_download.download_uri}"
+            artifact_to_download.download("#{staging_directory}/#{dist}", filename: "#{info["filename"]}")
+          end
         end
       end
     end
 
-    # Download all artifacts with specifed tag
-    # @param tag [String] tag of artifacts to download
-    # @param repo [String] repo the artifacts live
-    # @param remote_path [String] path to artifacts on artifactory
-    # @param local_path [String] location to download artifacts to
-    def download_artifacts_from_tag(tag, repo, remote_path, local_path)
+    # Download artifact(s) to local path based on name, repo, and path on artifactory
+    # @param artifact_name [String] name of artifact to download
+    # @param repo [String] repo the artifact lives
+    # @param remote_path [String] path to artifact in the repo
+    # @param local_path [String] local path to download artifact(s) to
+    def download_artifacts_from_name(artifact_name, repo, remote_path, local_path)
       check_authorization
-      artifacts = Artifactory::Resource::Artifact.search(name: tag, repos: repo)
+      artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, repos: repo)
       artifacts.each do |artifact|
         if artifact.download_uri.include? remote_path
+          artifact.download(local_path)
+        end
+      end
+    end
+
+    # Download final pe tarballs to local path based on name, repo, and path on artifactory
+    # @param artifact_name [String] pe final tag
+    # @param repo [String] repo the tarballs live
+    # @param remote_path [String] path to tarballs in the repo
+    # @param local_path [String] local path to download tarballs to
+    def download_pe_tarballs(artifact_name, repo, remote_path, local_path)
+      check_authorization
+      artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, repos: repo)
+      artifacts.each do |artifact|
+        if artifact.download_uri.include? remote_path
+          next if artifact.download_uri.include? "-rc"
           artifact.download(local_path)
         end
       end
