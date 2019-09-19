@@ -453,16 +453,31 @@ module Pkg
     end
 
     # Download final pe tarballs to local path based on name, repo, and path on artifactory
-    # @param artifact_name [String] pe final tag
+    # @param pe_version [String] pe final tag
     # @param repo [String] repo the tarballs live
     # @param remote_path [String] path to tarballs in the repo
     # @param local_path [String] local path to download tarballs to
-    def download_pe_tarballs(artifact_name, repo, remote_path, local_path)
+    def download_final_pe_tarballs(pe_version, repo, remote_path, local_path)
       check_authorization
-      artifacts = Artifactory::Resource::Artifact.search(name: artifact_name, repos: repo)
+      artifacts = Artifactory::Resource::Artifact.search(name: pe_version, repos: repo)
       artifacts.each do |artifact|
         if artifact.download_uri.include? remote_path
           next if artifact.download_uri.include? "-rc"
+          artifact.download(local_path)
+        end
+      end
+    end
+
+    # Download nonfinal pe tarballs to local path based on name, repo, and path on artifactory
+    # @param pe_version [String] pe nonfinal tag e. 2019.1.0-rc8
+    # @param repo [String] repo the tarballs live
+    # @param remote_path [String] path to tarballs in the repo
+    # @param local_path [String] local path to download tarballs to
+    def download_nonfinal_pe_tarballs(pe_version, repo, remote_path, local_path)
+      check_authorization
+      artifacts = Artifactory::Resource::Artifact.search(name: pe_version, repos: repo)
+      artifacts.each do |artifact|
+        if artifact.download_uri.include? remote_path
           artifact.download(local_path)
         end
       end
