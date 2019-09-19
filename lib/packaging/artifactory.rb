@@ -483,6 +483,17 @@ module Pkg
       end
     end
 
+    def copy_final_pe_tarballs(pe_version, repo, remote_path, target_path)
+      check_authorization
+      final_tarballs = Artifactory::Resource::Artifact.search(name: pe_version, repos: repo)
+      final_tarballs.each do |artifact|
+        if artifact.download_uri.include? remote_path
+          next if artifact.download_uri.include? "-rc"
+          artifact.copy("#{repo}/#{target_path}/test")
+        end
+      end
+    end
+
     # Remove shipped PE tarballs from artifactory
     # Used when compose fails, we only want the tarball shipped to artifactory if all platforms succeed
     # Identify which packages were created and shipped based on md5sum and remove them
