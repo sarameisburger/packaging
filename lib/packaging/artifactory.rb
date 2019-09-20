@@ -469,6 +469,20 @@ module Pkg
       end
     end
 
+    # Download beta pe tarballs to local path based on name, repo, and path on artifactory
+    # @param beta_version [String] pe beta tag ex. 2019.1.0-rc9
+    # @param repo [String] repo the tarballs live
+    # @param remote_path [String] path to tarballs in the repo
+    # @param local_path [String] local path to download tarballs to
+    def download_beta_pe_tarballs(beta_version, repo, remote_path, local_path)
+      check_authorization
+      artifacts = Artifactory::Resource::Artifact.search(name: beta_version, repos: repo)
+      artifacts.each do |artifact|
+        next unless artifact.download_uri.include? remote_path
+        artifact.download(local_path)
+      end
+    end
+
     # When we ship a new PE release we copy final tarballs to archives/releases
     # @param pe_version [String] pe final tag
     # @param repo [String] repo the tarballs live
