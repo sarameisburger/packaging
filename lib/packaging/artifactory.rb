@@ -567,6 +567,15 @@ module Pkg
       end
     end
 
+    def delete_contents_from_repo(repo, remote_path)
+      check_authorization
+      puts "remote path is #{remote_path}"
+      artifacts_to_delete = Artifactory::Resource::Artifact.pattern_search(repo: repo, pattern: "#{remote_path}/*/*")
+      artifacts_to_delete.each do |artifact|
+        puts artifact.download_uri
+      end
+    end
+
     # Remove shipped PE tarballs from artifactory
     # Used when compose fails, we only want the tarball shipped to artifactory if all platforms succeed
     # Identify which packages were created and shipped based on md5sum and remove them
