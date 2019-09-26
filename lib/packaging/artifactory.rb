@@ -544,6 +544,13 @@ module Pkg
       end
     end
 
+    def try_pattern(pattern)
+      tarballs = Artifactory::Resource::Artifact.pattern_search(repo: "generic_enterprise__local", pattern: pattern)
+      tarballs.each do |tar|
+        puts tar.download_uri
+      end
+    end
+
     # When we cut a release branch we need to copy the pe components into <pe_version>/release/<platform>
     # @param manifest [File] JSON file containing information about what packages to download and the corresponding md5sums
     # @param target_path [String] path on artifactory to copy components to
