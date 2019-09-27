@@ -574,6 +574,35 @@ module Pkg
       end
     end
 
+    def promote_all(manifest, target_path)
+      check_authorization
+      manifest.each do |dist, packages|
+        puts "Copying #{dist} packages..."
+        packages.each do |name, info|
+          artifact = Artifactory::Resource::Artifact.checksum_search(md5: "#{info["md5"]}", repos: ["rpm_enterprise__local", "debian_enterprise__local", "rpm__local", "debian__local"]).first
+          if artifact.nil?
+            puts "#{info["filename"]}"
+            next
+          end
+          begin
+            if artifact.repo.include? "rpm"
+              artifact_repo = "rpm_enterprise__local"
+            elsif artifact.repo.include? "debian"
+              artifact_repo = "debian_enterprise__local"
+            else
+              next
+            end
+            artifact_target_path = "#{artifact_repo}/#{target_path}/#{dist}/#{info["filename"]}"
+            #puts "Copying #{artifact.download_uri} to #{artifact_target_path}"
+            artifact.copy(artifact_target_path)
+          rescue Artifactory::Error::HTTPError
+            STDERR.puts " "
+            #STDERR.puts "Could not copy #{artifact_target_path}. Source and destination are the same. Skipping..."
+          end
+        end
+      end
+    end
+
     # Remove all artifacts in repo based on pattern, used when we purge all artifacts in release/ after PE release
     # @param repos [Array] repos that we want to search for artifacts in
     # @param pattern [String] pattern for artifacts that should be deleted ex. `2019.1/release/*/*`
