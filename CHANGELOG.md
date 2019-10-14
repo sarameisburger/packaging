@@ -7,6 +7,7 @@ This changelog adheres to [Keep a CHANGELOG](http://keepachangelog.com/).
 - Allow Gemfile source to be overridden with `GEM SOURCE`
 - (RE-11802) Add `update_release_metrics` task for adding a release to the
   release-metrics repo.
+  boop
 
 ### Changed
 - Stop testing against Ruby 2.0.0 and 2.1.9.
